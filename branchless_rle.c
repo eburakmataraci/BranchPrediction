@@ -3,19 +3,19 @@
 #include <stdint.h>
 #include <time.h>
 
-// Bit-düzeyinde optimize edilmiþ, dallanmasýz (branchless) RLE algoritmasý.
+// Bit-level optimized, branchless RLE algorithm.
 void rle_compress_branchless(const uint8_t *input, size_t length, FILE *output_file)
 {
     if (length == 0)
         return;
 
-    // Dallanmasýz dosya I/O (Girdi/Çýktý) iþlemi yapýlamayacaðý için,
-    // tüm veriyi geçici bir bellekte (buffer) toplayýp en son tek seferde diske yazacaðýz.
-    // Bu iþlem I/O darboðazýný ortadan kaldýrýp Throughput'u (MB/s) devasa oranda artýrýr.
+    // Since branchless file I/O is not possible, we will collect all data
+    // in a temporary buffer and write it to disk all at once at the end.
+    // This eliminates the I/O bottleneck and massively increases Throughput (MB/s).
     uint8_t *out_buffer = (uint8_t *)malloc(length * 2);
     if (!out_buffer)
     {
-        printf("Bellek tahsis hatasý!\n");
+        printf("Memory allocation error!\n");
         return;
     }
 
@@ -27,20 +27,20 @@ void rle_compress_branchless(const uint8_t *input, size_t length, FILE *output_f
     {
         uint8_t next = input[i];
 
-        // 1. FLUSH (Yazma) DURUMUNU TESPÝT ETME
+        // 1. DETECTING THE FLUSH (Write) CONDITION
         uint8_t is_diff = (curr != next);
 
         uint8_t is_full = (count == 255);
 
         uint8_t flush = is_diff | is_full;
 
-        // 2. ÞARTSIZ BELLEK YAZIMI (Unconditional Memory Write)
+        // 2. UNCONDITIONAL MEMORY WRITE
         out_buffer[write_idx * 2] = count;
         out_buffer[write_idx * 2 + 1] = curr;
 
         write_idx += flush;
 
-        // 3. BÝT DÜZEYÝNDE MATEMATÝKSEL DURUM GÜNCELLEMESÝ
+        // 3. BIT-LEVEL MATHEMATICAL STATE UPDATE
         uint8_t mask = flush * 0xFF;
 
         count++;
@@ -53,7 +53,7 @@ void rle_compress_branchless(const uint8_t *input, size_t length, FILE *output_f
     out_buffer[write_idx * 2 + 1] = curr;
     write_idx++;
 
-    // Tüm veriyi tek seferde (batch) diske yaz
+    // Write all data to disk at once (batch)
     fwrite(out_buffer, 1, write_idx * 2, output_file);
     free(out_buffer);
 }
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 3)
     {
-        printf("Kullaným: %s <girdi_dosyasi> <cikti_dosyasi>\n", argv[0]);
+        printf("Usage: %s <input_file> <output_file>\n", argv[0]);
         return 1;
     }
 
