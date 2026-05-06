@@ -2,8 +2,8 @@
 
 This project was developed to fix the hardware bottlenecks caused by the "if-else" conditions we usually see in data compression algorithms like Run-Length Encoding (RLE). Instead of using standard conditional branches, we used bitwise operations to stop the processor's pipeline from flushing, which gave our algorithm a massive performance boost. 
 
-![Uygulama Ekran Görüntüsü](images/resim1.jpeg)
-![Uygulama Ekran Görüntüsü](images/resim2.jpeg)
+![Uygulama Ekran Görüntüsü](images/baseline.jpeg)
+![Uygulama Ekran Görüntüsü](images/branchless.jpeg)
 
 
 ## Problem and Solution Approach
